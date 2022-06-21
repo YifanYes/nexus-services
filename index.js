@@ -6,11 +6,11 @@ const bodyParser = require('body-parser');
 const app = express();
 
 // Import routes modules
-const usersRouter = require('./routes/users.routes');
+const characterRouter = require('./routes/characters.routes');
 
 // Middleware
 app.use(bodyParser.json());
-app.use('/users', usersRouter);
+app.use('/characters', characterRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res) {

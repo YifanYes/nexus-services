@@ -1,26 +1,26 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const Character = require('../models/character');
 
-const userRegister = (req, res, next) => {
-    User.find({ email: req.body.email })
+const characterRegister = (req, res, next) => {
+    Character.find({ email: req.body.email })
         .exec()
-        .then((user) => {
-            if (user.length >= 1) return res.status(409).json({ message: "Email already exists" });
+        .then((character) => {
+            if (character.length >= 1) return res.status(409).json({ message: "Email already exists" });
 
             // Hasing user password for security
             bcrypt.hash(req.body.password, 10, (err, hash) => {
                 if (err) return res.status(500).json({ error: err, });
 
-                const user = new User({
+                const character = new Character({
                     _id: new mongoose.Types.ObjectId(),
                     email: req.body.email,
                     password: hash,
-                    name: req.body.name,
+                    username: req.body.name,
                 });
 
-                user
+                character
                     .save()
                     .then(async (result) => {
                         await result
@@ -53,14 +53,14 @@ const userRegister = (req, res, next) => {
 }
 
 
-const userLogin = (req, res, next) => {
-    User.find({ email: req.body.email })
+const characterLogin = (req, res, next) => {
+    Character.find({ email: req.body.email })
         .exec()
-        .then((user) => {
-            console.log(user)
-            if (user.length < 1) return res.status(401).json({ message: "Auth failed: Email not found probably" });
+        .then((character) => {
+            console.log(character);
+            if (character.length < 1) return res.status(401).json({ message: "Auth failed: Email not found probably" });
 
-            bcrypt.compare(req.body.password, user[0].password, (err, result) => {
+            bcrypt.compare(req.body.password, character[0].password, (err, result) => {
                 if (err) {
                     console.log(err)
                     return res.status(401).json({ message: "Auth failed" });
@@ -69,23 +69,22 @@ const userLogin = (req, res, next) => {
                 if (result) {
                     const token = jwt.sign(
                         {
-                            userId: user[0]._id,
-                            email: user[0].email,
-                            name: user[0].name,
+                            _id: character[0]._id,
+                            email: character[0].email,
+                            username: character[0].username,
                         },
                         process.env.jwtSecret,
                         {
                             expiresIn: "1d",
                         }
                     );
-                    console.log(user[0])
+                    console.log(character[0]);
                     return res.status(200).json({
                         message: "Auth successful",
-                        userDetails: {
-                            userId: user[0]._id,
-                            name: user[0].name,
-                            email: user[0].email,
-                            phone_number: user[0].phone_number,
+                        characterDetails: {
+                            userId: character[0]._id,
+                            username: character[0].name,
+                            email: character[0].email,
                         },
                         token: token,
                     });
@@ -103,15 +102,15 @@ const userLogin = (req, res, next) => {
 }
 
 const getMe = async (req, res) => {
-    const userId = req.user.userId
-    const user = await User.findById(userId)
-    if (user) return res.status(200).json(user);
+    const characterId = req.user.userId
+    const character = await Character.findById(characterId)
+    if (character) return res.status(200).json(character);
 
     return res.status(404).json({ message: 'User not found' });
 }
 
 module.exports = {
     getMe,
-    userLogin,
-    userRegister
+    characterRegister,
+    characterLogin,
 }
