@@ -1,16 +1,19 @@
 require('dotenv').config();
-require("./config/database").connect();
+require("./src/config/database").connect();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
 
-// Import routes modules
-const characterRouter = require('./routes/characters.routes');
+// Basic Configuration
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.json());
 app.use('/characters', characterRouter);
+
+// Import routes modules
+const characterRouter = require('./src/routes/characters.routes');
 
 // Catch 404 and forward to error handler
 app.use(function (req, res) {
