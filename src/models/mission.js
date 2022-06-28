@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const missionSchema = new Schema({
-    _id: Schema.Types.ObjectId,
+    _id: {
+        type: Schema.Types.ObjectId,
+        index: true,
+        required: true,
+        auto: true,
+    },
     completed: {
         type: Boolean,
         default: false
@@ -19,14 +24,14 @@ const missionSchema = new Schema({
         max: 10
     },
     requirements: [String],
-    members: Array,
+    members: [String],
     estimatedTime: {
         type: Number,
         required: true,
     },
     completionTime: Number,
     deadline: Date,
-    attatchment: String,
+    attachment: String,
 });
 
 module.exports = mongoose.model('Mission', missionSchema);
