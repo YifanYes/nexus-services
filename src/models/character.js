@@ -21,9 +21,9 @@ const characterSchema = new Schema({
         lowecase: true,
         required: [true, "Email is required"]
     },
-    _password: {
+    password: {
         type: String,
-        required: [true, "Password is required"]
+        required: true
     },
     role: {
         type: String,
@@ -96,7 +96,7 @@ const characterSchema = new Schema({
 characterSchema.methods.toJSON = function () {
     let user = this;
     let userObject = user.toObject();
-    delete userObject._password;
+    delete userObject.password;
 
     return userObject;
 }

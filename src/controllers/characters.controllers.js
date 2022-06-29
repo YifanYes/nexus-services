@@ -7,20 +7,25 @@ const characterRegister = (req, res, next) => {
 
     // Check if character already exists
     Character.find({ email: req.body.email }, (error, characterDB) => {
-        if (characterDB) return res.status(401).json({ message: "Email already exists" })
+        if (characterDB.length) return res.status(401).json({ message: "Email already exists" })
     });
 
     // Instantiate character model
     const character = new Character({
-        username: req.body.name,
+        username: req.body.username,
         email: req.body.email,
-        _password: bcrypt.hash(req.body.password, 10), // Hashing password for security
+        password: bcrypt.hashSync(req.body.password, 10), // Hashing password for security
         role: req.body.role
     });
 
     // Saving character in database
     character.save((error, characterDB) => {
-        if (error) return res.status(00).json({ message: "Internal server error" });
+        if (error) {
+            return res.status(500).json({
+                message: "Internal server error",
+                error: error
+            });
+        }
 
         return res.status(201).json({
             message: "Character created successfully",
@@ -37,7 +42,7 @@ const characterLogin = (req, res, next) => {
         if (!characterDB) return res.status(400).json({ message: "Incorrect email" });
 
         // Verify password
-        if (!bcrypt.compare(req.body.password, characterDB._password)) {
+        if (!bcrypt.compare(req.body.password, characterDB.password)) {
             return res.status(400).json({ message: "Incorrect password" })
         }
 

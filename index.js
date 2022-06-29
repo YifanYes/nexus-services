@@ -14,18 +14,18 @@ const characterRouter = require('./src/routes/characters.routes');
 
 // Middleware
 app.use(bodyParser.json());
-app.use('/characters', characterRouter);
+app.use('/character', characterRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res) {
-    res.status(err.status || 404).json({
+    res.status(404).json({
         message: "No such route exists"
     })
 });
 
 // Error handler
 app.use(function (err, req, res) {
-    res.status(err.status || 500).json({
+    res.status(500).json({
         message: "Error Message"
     })
 });
