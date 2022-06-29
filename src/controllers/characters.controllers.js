@@ -12,10 +12,9 @@ const characterRegister = (req, res, next) => {
 
     // Instantiate character model
     const character = new Character({
-        _id: new mongoose.Types.ObjectId(),
         username: req.body.name,
         email: req.body.email,
-        password: bcrypt.hash(req.body.password, 10), // Hashing password for security
+        _password: bcrypt.hash(req.body.password, 10), // Hashing password for security
         role: req.body.role
     });
 

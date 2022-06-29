@@ -2,12 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const missionSchema = new Schema({
-    _id: {
-        type: Schema.Types.ObjectId,
-        index: true,
-        required: true,
-        auto: true,
-    },
     completed: {
         type: Boolean,
         default: false

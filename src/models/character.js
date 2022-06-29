@@ -8,12 +8,6 @@ const validRoles = {
 }
 
 const characterSchema = new Schema({
-    _id: {
-        type: Schema.Types.ObjectId,
-        index: true,
-        required: true,
-        auto: true,
-    },
     active: {
         type: Boolean,
         default: true
