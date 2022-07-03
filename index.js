@@ -13,7 +13,9 @@ const HOST = '0.0.0.0';
 const characterRouter = require('./src/routes/characters.routes');
 
 // Middleware
+app.use(express.json());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/character', characterRouter);
 
 // Catch 404 and forward to error handler

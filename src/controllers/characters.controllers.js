@@ -3,22 +3,29 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Character = require('../models/character');
 
-const characterRegister = (req, res, next) => {
+const characterRegister = async (req, res, next) => {
+    let { username, email, password, role } = req.body;
+
+    // Check if all data is passed from client
+    if (!(username && email && password && role)) {
+        res.status(400).send("Missing fields");
+    };
 
     // Check if character already exists
-    Character.find({ email: req.body.email }, (error, characterDB) => {
-        if (characterDB.length) return res.status(401).json({ message: "Email already exists" })
-    });
+    let existingCharacter = await Character.find({ email });
+    if (existingCharacter) return res.status(409).send("Email already exists");
+
+    // TODO: Why there are duplicates ?
 
     // Instantiate character model
-    const character = new Character({
-        username: req.body.username,
-        email: req.body.email,
-        password: bcrypt.hashSync(req.body.password, 10), // Hashing password for security
-        role: req.body.role
+    const character = await new Character({
+        username,
+        email: email.toLowerCase(),
+        password: bcrypt.hashSync(password, 10), // Hashing password for security
+        role
     });
 
-    // Saving character in database
+    // Saving character in database and return auth token
     character.save((error, characterDB) => {
         if (error) {
             return res.status(500).json({
@@ -27,37 +34,45 @@ const characterRegister = (req, res, next) => {
             });
         }
 
-        return res.status(201).json({
-            message: "Character created successfully",
-            character: characterDB
-        })
-    })
-}
-
-const characterLogin = (req, res, next) => {
-    Character.find({ email: req.body.email }, (error, characterDB) => {
-        if (error) return res.status(500).json({ message: "Internal server error" });
-
-        // Verify that emails exists in the database
-        if (!characterDB) return res.status(400).json({ message: "Incorrect email" });
-
-        // Verify password
-        if (!bcrypt.compare(req.body.password, characterDB.password)) {
-            return res.status(400).json({ message: "Incorrect password" })
-        }
-
-        // Generate auth token and send to client
         let token = jwt.sign({
             character: characterDB,
         }, process.env.SEED_AUTH, {
             expiresIn: process.env.TOKEN_EXPIRY
         });
 
-        return res.json({
+        return res.status(201).json({
+            message: "Character created successfully",
             character: characterDB,
             token: token
-        });
+        })
     })
+}
+
+const characterLogin = async (req, res, next) => {
+    let { username, password } = req.body;
+
+    // Check if all data is passed from client
+    if (!(username && password)) return res.status(401).send("Fields missing");
+
+    // Look for character in database
+    let character = await Character.findOne({ username });
+    if (!character) return res.status(401).send("This character doesn't exists");
+
+    // Check password hash matches
+    if (character && bcrypt.compare(password, character.password)) {
+        let token = jwt.sign({
+            character: characterDB,
+        }, process.env.SEED_AUTH, {
+            expiresIn: process.env.TOKEN_EXPIRY
+        });
+
+        res.status(200).json({
+            character,
+            token
+        })
+    }
+
+    res.status(400).send("Invalid credentials")
 }
 
 const getMe = async (req, res) => {
