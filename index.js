@@ -16,7 +16,7 @@ const characterRouter = require('./src/routes/characters.routes');
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use('/character', characterRouter);
+app.use('/api/character', characterRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res) {

@@ -8,14 +8,12 @@ const characterRegister = async (req, res, next) => {
 
     // Check if all data is passed from client
     if (!(username && email && password && role)) {
-        res.status(400).send("Missing fields");
+        return res.status(400).send("Missing fields");
     };
 
     // Check if character already exists
     let existingCharacter = await Character.find({ email });
-    if (existingCharacter) return res.status(409).send("Email already exists");
-
-    // TODO: Why there are duplicates ?
+    if (existingCharacter.length) return res.status(409).send("Email already exists");
 
     // Instantiate character model
     const character = await new Character({
@@ -26,7 +24,7 @@ const characterRegister = async (req, res, next) => {
     });
 
     // Saving character in database and return auth token
-    character.save((error, characterDB) => {
+    character.save((error, character) => {
         if (error) {
             return res.status(500).json({
                 message: "Internal server error",
@@ -35,14 +33,13 @@ const characterRegister = async (req, res, next) => {
         }
 
         let token = jwt.sign({
-            character: characterDB,
+            character,
         }, process.env.SEED_AUTH, {
             expiresIn: process.env.TOKEN_EXPIRY
         });
 
         return res.status(201).json({
             message: "Character created successfully",
-            character: characterDB,
             token: token
         })
     })
@@ -59,32 +56,23 @@ const characterLogin = async (req, res, next) => {
     if (!character) return res.status(401).send("This character doesn't exists");
 
     // Check password hash matches
-    if (character && bcrypt.compare(password, character.password)) {
+    if (character && bcrypt.compareSync(password, character.password)) {
         let token = jwt.sign({
-            character: characterDB,
+            character,
         }, process.env.SEED_AUTH, {
             expiresIn: process.env.TOKEN_EXPIRY
         });
 
-        res.status(200).json({
-            character,
+        return res.status(200).json({
+            message: "Authentification successful",
             token
         })
     }
 
-    res.status(400).send("Invalid credentials")
-}
-
-const getMe = async (req, res) => {
-    const characterId = req.user.userId
-    const character = await Character.findById(characterId)
-    if (character) return res.status(200).json(character);
-
-    return res.status(404).json({ message: 'User not found' });
+    return res.status(400).send("Invalid credentials")
 }
 
 module.exports = {
-    getMe,
     characterRegister,
     characterLogin,
 }

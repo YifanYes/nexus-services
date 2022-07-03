@@ -5,6 +5,5 @@ const router = express.Router();
 
 router.post('/create', characterController.characterRegister);
 router.post('/login', characterController.characterLogin);
-router.get('/me', checkToken, characterController.getMe);
 
 module.exports = router;
