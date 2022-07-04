@@ -1,5 +1,5 @@
 require('dotenv').config();
-const bcrypt = require('bcrypt');
+const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Character = require('../models/character');
 
@@ -20,7 +20,7 @@ const characterRegister = async (req, res, next) => {
     const character = await new Character({
         username,
         email: email.toLowerCase(),
-        password: bcrypt.hashSync(password, 10), // Hashing password for security
+        password: bcryptjs.hashSync(password, 10), // Hashing password for security
         role
     });
 
@@ -62,7 +62,7 @@ const characterLogin = async (req, res, next) => {
         return res.status(401).send("This character doesn't exists");
 
     // Check password hash matches
-    if (character && bcrypt.compareSync(password, character.password)) {
+    if (character && js.compareSync(password, character.password)) {
         let token = jwt.sign(
             {
                 character
