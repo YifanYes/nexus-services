@@ -13,11 +13,12 @@ const addNewMission = (req, res) => {
         attachment: req.body.attachment
     });
 
-    await mission.save(error => {
-        if (error) return res.status(500).json({ error: 'Internal server error' });
+    mission.save((error) => {
+        if (error)
+            return res.status(500).json({ error: 'Internal server error' });
 
-        return res.status(201).json(mission)
-    })
+        return res.status(201).json(mission);
+    });
 };
 
 module.exports = {

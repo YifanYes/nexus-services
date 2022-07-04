@@ -3,9 +3,9 @@ const uniqueValidator = require('mongoose-unique-validator');
 const Schema = mongoose.Schema;
 
 const validRoles = {
-    values: ["ROOT", "ADMIN", "USER"],
+    values: ['ROOT', 'ADMIN', 'USER'],
     message: "You don't have the permission to execute this action"
-}
+};
 
 const characterSchema = new Schema({
     active: {
@@ -14,12 +14,12 @@ const characterSchema = new Schema({
     },
     username: {
         type: String,
-        required: [true, "Username is required"]
+        required: [true, 'Username is required']
     },
     email: {
         type: String,
         lowecase: true,
-        required: [true, "Email is required"]
+        required: [true, 'Email is required']
     },
     password: {
         type: String,
@@ -37,7 +37,7 @@ const characterSchema = new Schema({
     hp: {
         type: Number,
         default: 50,
-        min: 0,
+        min: 0
     },
     maxHp: {
         type: Number,
@@ -46,17 +46,17 @@ const characterSchema = new Schema({
     exp: {
         type: Number,
         default: 0,
-        min: 0,
+        min: 0
     },
     level: {
         type: Number,
         default: 0,
-        min: 0,
+        min: 0
     },
     knowledge: {
         type: Number,
         default: 0,
-        min: 0,
+        min: 0
     },
     stress: {
         type: Number,
@@ -66,7 +66,7 @@ const characterSchema = new Schema({
     },
     maximumTaskNumber: {
         type: Number,
-        min: 0,
+        min: 0
     },
     currentTaskNumber: {
         type: Number,
@@ -89,7 +89,7 @@ const characterSchema = new Schema({
         max: 10
     },
     teams: [String],
-    missions: [String],
+    missions: [String]
 });
 
 // Delete password key from object when returning character
@@ -99,7 +99,7 @@ characterSchema.methods.toJSON = function () {
     delete userObject.password;
 
     return userObject;
-}
+};
 
 characterSchema.plugin(uniqueValidator, {
     message: '{PATH} must be unique'

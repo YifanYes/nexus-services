@@ -21,11 +21,11 @@ const missionSchema = new Schema({
     members: [String],
     estimatedTime: {
         type: Number,
-        required: true,
+        required: true
     },
     completionTime: Number,
     deadline: Date,
-    attachment: String,
+    attachment: String
 });
 
 module.exports = mongoose.model('Mission', missionSchema);

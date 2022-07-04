@@ -9,4 +9,4 @@ test('Character can be registered', async () => {
             username: 'nexusUser'
         }
     });
-})
+});

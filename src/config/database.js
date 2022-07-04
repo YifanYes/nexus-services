@@ -7,13 +7,13 @@ exports.connect = () => {
         .connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s 
+            serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s
         })
         .then(() => {
-            console.log("MongoDB database connection established successfully");
+            console.log('MongoDB database connection established successfully');
         })
         .catch((error) => {
-            console.log("Database connection failed. Exiting now...");
+            console.log('Database connection failed. Exiting now...');
             console.error(error);
             process.exit(1);
         });

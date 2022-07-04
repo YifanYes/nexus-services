@@ -1,5 +1,5 @@
 require('dotenv').config();
-require("./src/config/database").connect();
+require('./src/config/database').connect();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -21,18 +21,18 @@ app.use('/api/character', characterRouter);
 // Catch 404 and forward to error handler
 app.use(function (req, res) {
     res.status(404).json({
-        message: "No such route exists"
-    })
+        message: 'No such route exists'
+    });
 });
 
 // Error handler
 app.use(function (err, req, res) {
     res.status(500).json({
-        message: "Error Message"
-    })
+        message: 'Error Message'
+    });
 });
 
-app.listen(PORT, HOST, error => {
+app.listen(PORT, HOST, (error) => {
     if (error) return console.log(error);
     console.log(`Server running on PORT ${PORT}`);
 });

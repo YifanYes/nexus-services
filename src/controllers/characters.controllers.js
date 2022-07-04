@@ -4,16 +4,17 @@ const jwt = require('jsonwebtoken');
 const Character = require('../models/character');
 
 const characterRegister = async (req, res, next) => {
-    let { username, email, password, role } = req.body;
+    const { username, email, password, role } = req.body;
 
     // Check if all data is passed from client
     if (!(username && email && password && role)) {
-        return res.status(400).send("Missing fields");
-    };
+        return res.status(400).send('Missing fields');
+    }
 
     // Check if character already exists
     let existingCharacter = await Character.find({ email });
-    if (existingCharacter.length) return res.status(409).send("Email already exists");
+    if (existingCharacter.length)
+        return res.status(409).send('Email already exists');
 
     // Instantiate character model
     const character = await new Character({
@@ -27,52 +28,61 @@ const characterRegister = async (req, res, next) => {
     character.save((error, character) => {
         if (error) {
             return res.status(500).json({
-                message: "Internal server error",
+                message: 'Internal server error',
                 error: error
             });
         }
 
-        let token = jwt.sign({
-            character,
-        }, process.env.SEED_AUTH, {
-            expiresIn: process.env.TOKEN_EXPIRY
-        });
+        let token = jwt.sign(
+            {
+                character
+            },
+            process.env.SEED_AUTH,
+            {
+                expiresIn: process.env.TOKEN_EXPIRY
+            }
+        );
 
         return res.status(201).json({
-            message: "Character created successfully",
+            message: 'Character created successfully',
             token: token
-        })
-    })
-}
+        });
+    });
+};
 
 const characterLogin = async (req, res, next) => {
     let { username, password } = req.body;
 
     // Check if all data is passed from client
-    if (!(username && password)) return res.status(401).send("Fields missing");
+    if (!(username && password)) return res.status(401).send('Fields missing');
 
     // Look for character in database
     let character = await Character.findOne({ username });
-    if (!character) return res.status(401).send("This character doesn't exists");
+    if (!character)
+        return res.status(401).send("This character doesn't exists");
 
     // Check password hash matches
     if (character && bcrypt.compareSync(password, character.password)) {
-        let token = jwt.sign({
-            character,
-        }, process.env.SEED_AUTH, {
-            expiresIn: process.env.TOKEN_EXPIRY
-        });
+        let token = jwt.sign(
+            {
+                character
+            },
+            process.env.SEED_AUTH,
+            {
+                expiresIn: process.env.TOKEN_EXPIRY
+            }
+        );
 
         return res.status(200).json({
-            message: "Authentification successful",
+            message: 'Authentification successful',
             token
-        })
+        });
     }
 
-    return res.status(400).send("Invalid credentials")
-}
+    return res.status(400).send('Invalid credentials');
+};
 
 module.exports = {
     characterRegister,
-    characterLogin,
-}
+    characterLogin
+};

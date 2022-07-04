@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const redis = require("redis");
-const util = require("util");
-const keys = require("../config/keys");
+const mongoose = require('mongoose');
+const redis = require('redis');
+const util = require('util');
+const keys = require('../config/keys');
 
 const client = redis.createClient({
     host: process.env.REDIS_HOST,
@@ -31,9 +31,9 @@ mongoose.Query.prototype.exec = async function () {
     if (cacheValue) {
         const doc = JSON.parse(cacheValue);
 
-        console.log("Response from Redis");
+        console.log('Response from Redis');
         return Array.isArray(doc)
-            ? doc.map(d => new this.model(d))
+            ? doc.map((d) => new this.model(d))
             : new this.model(doc);
     }
 
@@ -42,7 +42,7 @@ mongoose.Query.prototype.exec = async function () {
     client.hset(this.hashKey, key, JSON.stringify(result));
     client.expire(this.hashKey, this.time);
 
-    console.log("Response from MongoDB");
+    console.log('Response from MongoDB');
     return result;
 };
 
