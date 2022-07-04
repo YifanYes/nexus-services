@@ -18,6 +18,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/api/character', characterRouter);
 
+// Default route to check server status
+app.get('/', function (req, res) {
+    return res.status(200).json({ message: 'Server online' });
+});
+
 // Catch 404 and forward to error handler
 app.use(function (req, res) {
     res.status(404).json({
