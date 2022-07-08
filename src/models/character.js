@@ -8,7 +8,7 @@ const validRoles = {
 };
 
 const characterSchema = new Schema({
-    active: {
+    isActive: {
         type: Boolean,
         default: true
     },
@@ -43,6 +43,10 @@ const characterSchema = new Schema({
         type: Number,
         default: 50
     },
+    isAlive: {
+        type: Boolean,
+        default: true
+    },
     exp: {
         type: Number,
         default: 0,
@@ -59,11 +63,11 @@ const characterSchema = new Schema({
         min: -20,
         max: 20
     },
-    maximumTaskNumber: {
+    maximumMissionNumber: {
         type: Number,
         min: 0
     },
-    currentTaskNumber: {
+    currentMissionNumber: {
         type: Number,
         default: 0,
         min: 0
@@ -82,6 +86,15 @@ const characterSchema = new Schema({
         type: Number,
         min: 0,
         max: 10
+    },
+    weekendDays: {
+        type: Number,
+        default: 2,
+        min: 0
+    },
+    daysOffWork: {
+        type: Number,
+        default: 0
     },
     teams: [String],
     missions: [String]
