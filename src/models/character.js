@@ -53,11 +53,6 @@ const characterSchema = new Schema({
         default: 0,
         min: 0
     },
-    knowledge: {
-        type: Number,
-        default: 0,
-        min: 0
-    },
     stress: {
         type: Number,
         default: 0,
