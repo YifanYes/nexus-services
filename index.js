@@ -11,6 +11,7 @@ const HOST = '0.0.0.0';
 
 // Import routes modules
 const characterRouter = require('./src/routes/characters.routes');
+const missionRouter = require('./src/routes/missions.routes');
 
 // Import scheduled jobs
 require('./src/schedules/updateAttributesWeekly')();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/api/character', characterRouter);
+app.use('/api/mission', missionRouter);
 
 // Default route to check server status
 app.get('/', function (req, res) {

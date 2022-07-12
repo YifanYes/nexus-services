@@ -17,7 +17,19 @@ const missionSchema = new Schema({
         min: 1,
         max: 10
     },
+    stress: {
+        type: Number,
+        default: 0,
+        min: -20,
+        max: 20
+    },
     requirements: [String],
+    sinergy: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 10
+    },
     members: [String],
     estimatedTime: {
         type: Number,
