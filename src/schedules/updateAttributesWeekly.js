@@ -1,8 +1,8 @@
-const nodeCron = require('node-cron');
+const cron = require('node-cron');
 const Character = require('../models/character');
 const math = require('../utils/math.utils');
 
-const updateAttributes = async () => {
+const updateAttributesWeekly = async () => {
     // Get all characters list
     let characterList = await Character.find();
 
@@ -31,4 +31,6 @@ const updateAttributes = async () => {
 };
 
 // Execute this task every sunday at 00:00 to update character attributes
-const job = nodeCron.schedule('0 0 0 * * 7', updateAttributes);
+module.exports = () => {
+    cron.schedule('0 0 * * Sun', updateAttributesWeekly);
+};
