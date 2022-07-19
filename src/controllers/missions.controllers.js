@@ -1,7 +1,5 @@
 require('dotenv').config();
-const Mission = require('../models/mission');
-const Character = require('../models/character');
-const { $where } = require('../models/mission');
+const math = require('../utils/math.utils');
 
 const addNewMission = async (req, res) => {
     const mission = new Mission({
@@ -19,20 +17,29 @@ const addNewMission = async (req, res) => {
 
     // After assigning a mission, update each character attributes
     for (let id of mission.members) {
-        let character = Character.findById({ id });
+        Character.findById(id, (error, character) => {
+            if (error) return handleError(error);
 
-        character.stress +=
-            (character.resistance + mission.sinergy) / 2 + 2 * mission.stress;
-        character.performance += mission.sinergy / 3;
+            character.stress = math.round2Fixed(
+                character.stress +
+                (character.resistance + mission.sinergy) / 2 +
+                2 * mission.stress
+            );
 
-        await character.save();
+            // TODO: el performance sale como NaN
+            character.performance = math.round2Fixed(
+                character.performance + mission.sinergy / 3
+            );
+
+            character.save();
+        });
     }
 
     mission.save((error) => {
         if (error)
             return res.status(500).json({ error: 'Internal server error' });
 
-        return res.status(201).json(mission);
+        return res.status(201).json({ data: mission });
     });
 };
 
@@ -46,8 +53,8 @@ const finishMission = async (req, res) => {
     await mission.save();
 
     // Updating each character's attribute after successfully finishing a mission
-    for (let charactedId of mission.members) {
-        let character = await Character.findById({ charactedId });
+    for (let characterId of mission.members) {
+        let character = await Character.findById({ characterId });
 
         character.hp += Math.abs(mission.stress) + mission.difficulty / 4;
         character.stress += mission.difficulty / 3;

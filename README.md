@@ -16,6 +16,12 @@ To run this repository, first install the required packages:
 $ npm install
 ```
 
+To run database migrations, first you need a sql connection string, then run:
+
+```
+$ node_modules/.bin/prisma migrate dev --name init
+```
+
 And to run the server:
 
 ```

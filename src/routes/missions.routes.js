@@ -1,8 +1,8 @@
 const express = require('express');
-const checkToken = require('../middlewares/checkToken.middleware');
-const missionsController = require('../controllers/characters.controllers');
+const missionsController = require('../controllers/missions.controllers');
 const router = express.Router();
 
-router.post('/add', checkToken, missionsController.addNewMission);
+router.post('/add', missionsController.addNewMission);
+router.patch('/finish', missionsController.finishMission);
 
 module.exports = router;

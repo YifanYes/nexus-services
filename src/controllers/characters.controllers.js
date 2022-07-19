@@ -1,10 +1,10 @@
 require('dotenv').config();
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const Character = require('../models/character');
 
 const characterRegister = async (req, res, next) => {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, resistance, stress, performace } =
+        req.body;
 
     // Check if all data is passed from client
     if (!(username && email && password && role)) {
@@ -21,7 +21,10 @@ const characterRegister = async (req, res, next) => {
         username,
         email: email.toLowerCase(),
         password: bcryptjs.hashSync(password, 10), // Hashing password for security
-        role
+        role,
+        resistance,
+        stress,
+        performace
     });
 
     // Saving character in database and return auth token

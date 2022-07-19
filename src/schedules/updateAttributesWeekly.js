@@ -1,5 +1,4 @@
 const cron = require('node-cron');
-const Character = require('../models/character');
 const math = require('../utils/math.utils');
 
 const updateAttributesWeekly = async () => {
