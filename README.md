@@ -19,7 +19,7 @@ $ npm install
 To run database migrations, first you need a sql connection string, then run:
 
 ```
-$ node_modules/.bin/prisma migrate dev --name init
+$ npx prisma migrate dev
 ```
 
 And to run the server:

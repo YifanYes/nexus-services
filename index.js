@@ -7,6 +7,9 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
+// Import Prisma Client
+const prisma = require('./src/config/database');
+
 // Import routes modules
 const characterRouter = require('./src/routes/characters.routes');
 const missionRouter = require('./src/routes/missions.routes');
