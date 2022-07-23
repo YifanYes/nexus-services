@@ -29,7 +29,7 @@ model Character {
     password             String
     profilePhoto         String?
     role                 Role     @default(USER)
-    class                Class?
+    characterClass       Class?
     hp                   Int?
     maxHp                Int?
     experience           Int?
@@ -37,6 +37,7 @@ model Character {
     stress               Float?
     maximumMissionNumber Int?
     currentMissionNumber Int?
+    chainedMissions      Int?     @default(0)
     resistance           Float?
     performance          Float?
     trust                Float?
@@ -45,29 +46,29 @@ model Character {
     createdAt            DateTime @default(now())
     updatedAt            DateTime @updatedAt
 
-    parties  CharactersOnParties[]
+    guilds   CharactersOnGuilds[]
     missions MissionsOnCharacters[]
 }
 
-model Party {
+model Guild {
     id        BigInt   @id @default(autoincrement())
     isActive  Boolean  @default(true)
     name      String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    characters CharactersOnParties[]
+    characters CharactersOnGuilds[]
 }
 
-// Intermediate table to crate many-to-many relationship between characters and parties
-model CharactersOnParties {
+// Intermediate table to crate many-to-many relationship between characters and guilds
+model CharactersOnGuilds {
     character   Character @relation(fields: [characterId], references: [id])
     characterId BigInt
-    party       Party     @relation(fields: [partyId], references: [id])
-    partyId     BigInt
+    guild       Guild     @relation(fields: [guildId], references: [id])
+    guildId     BigInt
     assignedAt  DateTime  @default(now())
 
-    @@id([characterId, partyId])
+    @@id([characterId, guildId])
 }
 
 model Board {

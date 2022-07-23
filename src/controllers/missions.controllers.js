@@ -1,50 +1,73 @@
 require('dotenv').config();
+const prisma = require('../config/database');
 const math = require('../utils/math.utils');
 
 const addNewMission = async (req, res) => {
-    const mission = new Mission({
-        title: req.body.title,
-        description: req.body.description,
-        difficulty: req.body.difficulty,
-        stress: req.body.stress,
-        requirements: req.body.requirements,
-        sinergy: req.body.sinergy,
-        members: req.body.members,
-        estimatedTime: req.body.estimatedTime,
-        deadline: req.body.deadline,
-        attachment: req.body.attachment
+    //TODO: validar los datos
+
+    // Create mission object from request and save it to the database
+    const mission = await prisma.mission.create({
+        data: {
+            title: req.body.title,
+            description: req.body.description,
+            difficulty: req.body.difficulty,
+            stress: req.body.stress,
+            requirements: req.body.requirements,
+            sinergy: req.body.sinergy,
+            members: req.body.members,
+            estimatedTime: req.body.estimatedTime,
+            deadline: req.body.deadline,
+            attachment: req.body.attachment
+        }
     });
 
-    // After assigning a mission, update each character attributes
+    // Create relationhip with members and update each character's attributes
     for (let id of mission.members) {
-        Character.findById(id, (error, character) => {
-            if (error) return handleError(error);
+        await prisma.missionsOnCharacters.create({
+            data: {
+                characterId: id,
+                missionId: mission.id
+            }
+        });
 
-            character.stress = math.round2Fixed(
-                character.stress +
-                (character.resistance + mission.sinergy) / 2 +
-                2 * mission.stress
-            );
+        // Get character data
+        let character = await prisma.findUnique({
+            where: {
+                id: id
+            }
+        });
 
-            // TODO: el performance sale como NaN
-            character.performance = math.round2Fixed(
-                character.performance + mission.sinergy / 3
-            );
+        let updateStress = math.round2Fixed(
+            character.stress +
+            (character.resistance + mission.sinergy) / 2 +
+            2 * mission.stress
+        );
 
-            character.save();
+        // TODO: el performance sale como NaN
+        let updatePerformance = math.round2Fixed(
+            character.performance + mission.sinergy / 3
+        );
+
+        await prisma.character.update({
+            where: {
+                id: id
+            },
+            data: {
+                stress: updateStress,
+                performance: updatePerformance
+            }
         });
     }
 
-    mission.save((error) => {
-        if (error)
-            return res.status(500).json({ error: 'Internal server error' });
-
-        return res.status(201).json({ data: mission });
-    });
+    return res.status(201).json({ data: mission });
 };
 
 const finishMission = async (req, res) => {
-    let mission = await Mission.findById({ id: req.body.id });
+    let mission = await prisma.mission.findUnique({
+        where: {
+            id: req.body.id
+        }
+    });
 
     // Marking mission as completed and registering completion time
     mission.completed = true;

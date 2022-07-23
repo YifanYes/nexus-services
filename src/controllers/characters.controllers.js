@@ -1,44 +1,44 @@
 require('dotenv').config();
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const prisma = require('../config/database');
 
 const characterRegister = async (req, res, next) => {
-    const { username, email, password, role, resistance, stress, performace } =
-        req.body;
+    const { username, email, password, role, characterClass } = req.body;
 
     // Check if all data is passed from client
-    if (!(username && email && password && role)) {
+    if (!(username && email && password && role && characterClass)) {
         return res.status(400).send('Missing fields');
     }
 
     // Check if character already exists
-    let existingCharacter = await Character.find({ email });
+    let existingCharacter = await prisma.character.findUnique({
+        where: {
+            email: email
+        }
+    });
     if (existingCharacter.length)
         return res.status(409).send('Email already exists');
 
-    // Instantiate character model
-    const character = await new Character({
-        username,
+    // Create character object
+    const newCharacter = {
+        username: username,
         email: email.toLowerCase(),
         password: bcryptjs.hashSync(password, 10), // Hashing password for security
-        role,
-        resistance,
-        stress,
-        performace
+        role: role,
+        characterClass: characterClass
+    };
+
+    // Saving character in database
+    const createdCharacter = await prisma.character.create({
+        data: newCharacter
     });
 
-    // Saving character in database and return auth token
-    character.save((error, character) => {
-        if (error) {
-            return res.status(500).json({
-                message: 'Internal server error',
-                error: error
-            });
-        }
-
+    // Return auth token
+    if (createdCharacter) {
         let token = jwt.sign(
             {
-                character
+                createdCharacter
             },
             process.env.SEED_AUTH,
             {
@@ -50,7 +50,7 @@ const characterRegister = async (req, res, next) => {
             message: 'Character created successfully',
             token: token
         });
-    });
+    }
 };
 
 const characterLogin = async (req, res, next) => {
@@ -60,12 +60,16 @@ const characterLogin = async (req, res, next) => {
     if (!(username && password)) return res.status(401).send('Fields missing');
 
     // Look for character in database
-    let character = await Character.findOne({ username });
+    let character = await prisma.character.findUnique({
+        where: {
+            username: username
+        }
+    });
     if (!character)
         return res.status(401).send("This character doesn't exists");
 
     // Check password hash matches
-    if (character && js.compareSync(password, character.password)) {
+    if (character && bcryptjs.compareSync(password, character.password)) {
         let token = jwt.sign(
             {
                 character
