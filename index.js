@@ -11,8 +11,9 @@ const HOST = '0.0.0.0';
 const prisma = require('./src/config/database');
 
 // Import routes modules
-const characterRouter = require('./src/routes/characters.routes');
-const missionRouter = require('./src/routes/missions.routes');
+const charactersRouter = require('./src/routes/characters.routes');
+const missionsRouter = require('./src/routes/missions.routes');
+const guildsRouter = require('./src/routes/guilds.routes');
 
 // Import scheduled jobs
 require('./src/schedules/updateAttributesWeekly')();
@@ -21,8 +22,9 @@ require('./src/schedules/updateAttributesWeekly')();
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use('/api/characters', characterRouter);
-app.use('/api/missions', missionRouter);
+app.use('/api/characters', charactersRouter);
+app.use('/api/missions', missionsRouter);
+app.use('/api/guilds', guildsRouter);
 
 // Default route to check server status
 app.get('/', function (req, res) {
