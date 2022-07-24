@@ -27,6 +27,7 @@ model Character {
     username             String   @unique
     email                String   @unique
     password             String
+    biography            String
     profilePhoto         String?
     role                 Role     @default(USER)
     characterClass       Class?
@@ -83,10 +84,11 @@ model Board {
 }
 
 model Column {
-    id        BigInt   @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id           BigInt   @id @default(autoincrement())
+    name         String
+    orderInBoard Int
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 
     board    Board     @relation(fields: [boardId], references: [id])
     boardId  BigInt
@@ -96,6 +98,7 @@ model Column {
 model Mission {
     id             BigInt    @id @default(autoincrement())
     isCompleted    Boolean   @default(false)
+    orderInColumn  Int
     title          String
     description    String?
     difficulty     Int

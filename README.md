@@ -6,7 +6,7 @@ Nexus is a gamified agile methodology for software development focused on employ
 
 ### Project configuration
 
-You will need a CockroachDB database on CockroachDB Atlas. You can create a free cluster at https://www.mongodb.com. You will need to get the `connection string` and put it in the dotenv file.
+You will need a CockroachDB serverless cluster. You can create a free cluster at https://www.cockroachlabs.com/get-started-cockroachdb/. You will need to get the `connection string` and put it in the dotenv file as DATABASE_URL.
 
 ### Useful commands
 

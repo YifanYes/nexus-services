@@ -89,7 +89,24 @@ const characterLogin = async (req, res, next) => {
     return res.status(400).send('Invalid credentials');
 };
 
+// Get a single character info
+const getCharacter = async (req, res) => {
+    const character = await prisma.findUnique({
+        where: {
+            id: req.params.charaterId
+        }
+    });
+
+    return res.status(200).json({ data: character });
+};
+
+const editCharacter = async (req, res) => {
+    const { stress, performance, resistance } = req.body;
+};
+
 module.exports = {
     characterRegister,
-    characterLogin
+    characterLogin,
+    getCharacter,
+    editCharacter
 };

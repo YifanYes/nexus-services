@@ -21,8 +21,8 @@ require('./src/schedules/updateAttributesWeekly')();
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use('/api/character', characterRouter);
-app.use('/api/mission', missionRouter);
+app.use('/api/characters', characterRouter);
+app.use('/api/missions', missionRouter);
 
 // Default route to check server status
 app.get('/', function (req, res) {

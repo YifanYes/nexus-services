@@ -2,27 +2,48 @@ require('dotenv').config();
 const prisma = require('../config/database');
 const math = require('../utils/math.utils');
 
+const getMission = async (req, res) => {
+    const mission = await prisma.findUnique({
+        where: {
+            id: req.params.missionId
+        }
+    });
+
+    return res.status(200).json({ data: mission });
+};
+
 const addNewMission = async (req, res) => {
-    //TODO: validar los datos
+    const {
+        title,
+        description,
+        orderInColumn,
+        difficulty,
+        stress,
+        requirements,
+        sinergy,
+        members,
+        estimatedTime,
+        deadline
+    } = req.body;
 
     // Create mission object from request and save it to the database
     const mission = await prisma.mission.create({
         data: {
-            title: req.body.title,
-            description: req.body.description,
-            difficulty: req.body.difficulty,
-            stress: req.body.stress,
-            requirements: req.body.requirements,
-            sinergy: req.body.sinergy,
-            members: req.body.members,
-            estimatedTime: req.body.estimatedTime,
-            deadline: req.body.deadline,
-            attachment: req.body.attachment
+            title: title,
+            description: description,
+            orderInColumn: orderInColumn,
+            difficulty: difficulty,
+            stress: stress,
+            requirements: requirements,
+            sinergy: sinergy,
+            estimatedTime: estimatedTime,
+            deadline: deadline,
+            attachment: attachment
         }
     });
 
     // Create relationhip with members and update each character's attributes
-    for (let id of mission.members) {
+    for (let id of members) {
         await prisma.missionsOnCharacters.create({
             data: {
                 characterId: id,
@@ -38,15 +59,10 @@ const addNewMission = async (req, res) => {
         });
 
         let updateStress = math.round2Fixed(
-            character.stress +
-            (character.resistance + mission.sinergy) / 2 +
-            2 * mission.stress
+            character.stress + (character.resistance + mission.sinergy) / 2 + 2 * mission.stress
         );
 
-        // TODO: el performance sale como NaN
-        let updatePerformance = math.round2Fixed(
-            character.performance + mission.sinergy / 3
-        );
+        let updatePerformance = math.round2Fixed(character.performance + mission.sinergy / 3);
 
         await prisma.character.update({
             where: {
@@ -59,40 +75,88 @@ const addNewMission = async (req, res) => {
         });
     }
 
-    return res.status(201).json({ data: mission });
+    return res.status(201).json({
+        message: "Successfully created mission and updated members' atributes",
+        data: mission
+    });
 };
 
 const finishMission = async (req, res) => {
-    let mission = await prisma.mission.findUnique({
+    const { completionTime } = req.body.completionTime;
+
+    if (!completionTime)
+        return res
+            .status(401)
+            .json({ message: 'You must declare the completion time of this mission' });
+
+    // Updation mission as completed and registering completion time
+    let mission = await prisma.mission.update({
         where: {
-            id: req.body.id
+            id: req.params.missionId
+        },
+        data: {
+            completed: true,
+            completionTime: completionTime
         }
     });
 
-    // Marking mission as completed and registering completion time
-    mission.completed = true;
-    mission.completionTime = req.body.completionTime;
+    if (!mission) return res.status(404).json({ message: "This mission doesn't exist" });
 
-    await mission.save();
+    // Get list of mission's members
+    let members = await prisma.missionsOnCharacters.findMany({
+        where: {
+            missionId: req.params.missionId
+        }
+    });
 
-    // Updating each character's attribute after successfully finishing a mission
-    for (let characterId of mission.members) {
-        let character = await Character.findById({ characterId });
+    // Get mission data
+    let updatedMission = await prisma.mission.findUnique({
+        where: {
+            id: req.params.missionId
+        }
+    });
 
-        character.hp += Math.abs(mission.stress) + mission.difficulty / 4;
-        character.stress += mission.difficulty / 3;
-        character.exp +=
-            (Math.abs(mission.stress) + mission.difficulty) * 2 -
-            (mission.completionTime - mission.estimatedTime) * 5;
-        character.performance +=
-            mission.estimatedTime - mission.completionTime + 1;
+    // Updating each member's attributes
+    for (let characterId of members) {
+        let character = await prisma.character.findUnique({
+            where: {
+                id: characterId
+            }
+        });
 
-        await character.save();
+        let updatedHp =
+            character.hp + Math.abs(updatedMission.stress) + updatedMission.difficulty / 4;
+        let updatedStress = character.stress + updatedMission.difficulty / 3;
+        let updatedExperience =
+            character.experience +
+            (Math.abs(updatedMission.stress) + updatedMissio.difficulty) * 2 -
+            (updatedMissio.completionTime - updatedMissio.estimatedTime) * 5;
+        let updatedPerformance =
+            character.performance +
+            updatedMission.estimatedTime -
+            updatedMission.completionTime +
+            1;
+
+        await prisma.character.update({
+            where: {
+                id: characterId
+            },
+            data: {
+                hp: updatedHp,
+                stress: updatedStress,
+                experience: updatedExperience,
+                performance: updatedPerformance
+            }
+        });
+
         // TODO: When completing 5 missions in a row, add 2 points to performance
     }
+
+    return res.status(200).json({ message: 'Mission complete! Characters updated successfully' });
 };
 
 module.exports = {
+    getMission,
     addNewMission,
     finishMission
 };
