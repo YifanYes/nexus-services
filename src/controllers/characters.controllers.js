@@ -17,8 +17,7 @@ const characterRegister = async (req, res, next) => {
             email: email
         }
     });
-    if (existingCharacter.length)
-        return res.status(409).send('Email already exists');
+    if (existingCharacter.length) return res.status(409).send('Email already exists');
 
     // Create character object
     const newCharacter = {
@@ -65,8 +64,7 @@ const characterLogin = async (req, res, next) => {
             username: username
         }
     });
-    if (!character)
-        return res.status(401).send("This character doesn't exists");
+    if (!character) return res.status(401).send("This character doesn't exists");
 
     // Check password hash matches
     if (character && bcryptjs.compareSync(password, character.password)) {
