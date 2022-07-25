@@ -1,5 +1,4 @@
 const express = require('express');
-const checkToken = require('../middlewares/checkToken.middleware');
 const charactersController = require('../controllers/characters.controllers');
 const router = express.Router();
 

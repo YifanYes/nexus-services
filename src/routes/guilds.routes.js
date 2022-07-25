@@ -1,5 +1,4 @@
 const express = require('express');
-const checkToken = require('../middlewares/checkToken.middleware');
 const guildsController = require('../controllers/guilds.controllers');
 const router = express.Router();
 
