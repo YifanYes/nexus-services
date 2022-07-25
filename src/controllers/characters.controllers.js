@@ -2,6 +2,8 @@ require('dotenv').config();
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/database');
+const generateToken = require();
+const tokenCaching = require('../middlewares/tokenCaching.middleware');
 
 const characterRegister = async (req, res, next) => {
     const { username, email, password, role, characterClass } = req.body;
@@ -35,21 +37,31 @@ const characterRegister = async (req, res, next) => {
 
     // Return auth token
     if (createdCharacter) {
-        let token = jwt.sign(
-            {
-                createdCharacter
-            },
-            process.env.SEED_AUTH,
-            {
-                expiresIn: process.env.TOKEN_EXPIRY
-            }
-        );
+        const resultAccess = await generateToken(createdCharacter, 1);
+        const resultRefresh = await generateToken(createdCharacter, 2);
+        const refreshSecret = process.env.JWT_REFRESH_SECRET;
 
-        return res.status(201).json({
-            message: 'Character created successfully',
-            token: token
-        });
+        const resultCaching = await tokenCaching.setCache(accessToken); // Cache the valid token
+        if (!resultCaching.result) {
+            const error = new Error();
+            error.message = resultCaching.message;
+            throw error;
+        }
+
+        // If token is not valid, it throws an error
+        await jwt.verify(resultRefresh.token, refreshSecret);
+
+        return res
+            .status(201)
+            .cookie('accessToken', resultAccess.token, resultAccess.cookie)
+            .cookie('refreshToken', resultRefresh.token, resultRefresh.cookie)
+            .json({
+                message: 'Character created successfully',
+                token: resultAccess.token
+            });
     }
+
+    return res.status(500).json({ message: 'Something went wrong' });
 };
 
 const characterLogin = async (req, res, next) => {
@@ -102,9 +114,21 @@ const editCharacter = async (req, res) => {
     const { stress, performance, resistance } = req.body;
 };
 
+const signOut = async (req, res) => {
+    try {
+        res.status(200).clearCookie('accessToken').clearCookie('refreshToken').json({
+            message: 'Signed out'
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Something went wrong' });
+        return;
+    }
+};
+
 module.exports = {
     characterRegister,
     characterLogin,
     getCharacter,
-    editCharacter
+    editCharacter,
+    signOut
 };

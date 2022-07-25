@@ -4,7 +4,9 @@ const getGuild = async (req, res) => {
     // Get guild and guild members data
     const guild = await prisma.guild.findUnique({
         where: { id: req.params.id },
-        characters: true
+        include: {
+            characters: true
+        }
     });
 
     return res.status(200).json({ data: guild });
