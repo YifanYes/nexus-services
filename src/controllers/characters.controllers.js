@@ -2,7 +2,7 @@ require('dotenv').config();
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/database');
-const generateToken = require();
+const generateToken = require('../middlewares/generateToken.middleware');
 const tokenCaching = require('../middlewares/tokenCaching.middleware');
 
 const characterRegister = async (req, res, next) => {
