@@ -1,0 +1,127 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "cockroachdb"
+    url      = env("DATABASE_URL")
+}
+
+enum Role {
+    ROOT
+    TASK_MASTER
+    USER
+}
+
+enum Class {
+    ASSASSIN
+    WARRIOR
+    MAGE
+    BARD
+}
+
+model Character {
+    id                   BigInt   @id @default(autoincrement())
+    isActive             Boolean  @default(true)
+    isAlive              Boolean  @default(true)
+    username             String   @unique
+    email                String   @unique
+    password             String
+    biography            String
+    profilePhoto         String?
+    role                 Role     @default(USER)
+    characterClass       Class?
+    hp                   Int?
+    maxHp                Int?
+    experience           Int?
+    level                Int?
+    stress               Float?
+    maximumMissionNumber Int?
+    currentMissionNumber Int?
+    chainedMissions      Int?     @default(0)
+    resistance           Float?
+    performance          Float?
+    trust                Float?
+    weekendDays          Int?     @default(2)
+    daysOffWork          Int?     @default(0)
+    createdAt            DateTime @default(now())
+    updatedAt            DateTime @updatedAt
+
+    guilds   CharactersOnGuilds[]
+    missions MissionsOnCharacters[]
+}
+
+model Guild {
+    id        BigInt   @id @default(autoincrement())
+    isActive  Boolean  @default(true)
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    characters CharactersOnGuilds[]
+}
+
+// Intermediate table to crate many-to-many relationship between characters and guilds
+model CharactersOnGuilds {
+    character   Character @relation(fields: [characterId], references: [id])
+    characterId BigInt
+    guild       Guild     @relation(fields: [guildId], references: [id])
+    guildId     BigInt
+    assignedAt  DateTime  @default(now())
+
+    @@id([characterId, guildId])
+}
+
+model Board {
+    id          BigInt   @id @default(autoincrement())
+    name        String
+    description String?
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    columns Column[]
+}
+
+model Column {
+    id           BigInt   @id @default(autoincrement())
+    name         String
+    orderInBoard Int
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+
+    board    Board     @relation(fields: [boardId], references: [id])
+    boardId  BigInt
+    missions Mission[]
+}
+
+model Mission {
+    id             BigInt    @id @default(autoincrement())
+    isCompleted    Boolean   @default(false)
+    orderInColumn  Int
+    title          String
+    description    String?
+    difficulty     Int
+    requirements   String[]
+    sinergy        Int
+    stress         Float
+    estimatedTime  Float
+    completionTime Float?
+    deadline       DateTime?
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+
+    characters MissionsOnCharacters[]
+    column     Column                 @relation(fields: [columnId], references: [id])
+    columnId   BigInt
+}
+
+// Intermediate table to crate many-to-many relationship between characters and missions
+model MissionsOnCharacters {
+    character   Character @relation(fields: [characterId], references: [id])
+    characterId BigInt
+    mission     Mission   @relation(fields: [missionId], references: [id])
+    missionId   BigInt
+
+    @@id([characterId, missionId])
+}

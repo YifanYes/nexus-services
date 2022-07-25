@@ -1,9 +1,11 @@
 const express = require('express');
 const checkToken = require('../middlewares/checkToken.middleware');
-const characterController = require('../controllers/characters.controllers');
+const charactersController = require('../controllers/characters.controllers');
 const router = express.Router();
 
-router.post('/create', characterController.characterRegister);
-router.post('/login', characterController.characterLogin);
+router.post('/', charactersController.characterRegister);
+router.post('/login', charactersController.characterLogin);
+router.get('/:characterId', charactersController.getCharacter);
+router.patch('/:characterId', charactersController.editCharacter);
 
 module.exports = router;

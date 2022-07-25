@@ -1,22 +1,50 @@
 require('dotenv').config();
-require('./src/config/database').connect();
 const express = require('express');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const app = express();
 
 // Basic Configuration
 const PORT = process.env.PORT || 8080;
+const DOMAIN = process.env.DOMAIN;
 const HOST = '0.0.0.0';
 
+// Import Prisma Client
+const prisma = require('./src/config/database');
+
+// CSRF protection middleware
+const sessionConfig = session({
+    secret: process.env.CSRFT_SESSION_SECRET,
+    keys: ['some random key'],
+    resave: false,
+    saveUninitialized: false,
+    // Generated session id is stored in the cookie
+    cookie: {
+        maxAge: parseInt(process.env.CSRFT_EXPIRESIN), // Expiration time
+        sameSite: 'strict', // Cookies will only be sent in a first-party context. 'lax' is default value for third-parties
+        httpOnly: true, // Cookie is sent only over HTTP(S) domain of the server in which the URL is being requested
+        secure: false // Browser only sends the cookie over HTPPS. False for localhost
+    }
+});
+
 // Import routes modules
-const characterRouter = require('./src/routes/characters.routes');
+const authRouter = require('./src/routes/auth.routes');
+const charactersRouter = require('./src/routes/characters.routes');
+const missionsRouter = require('./src/routes/missions.routes');
+const guildsRouter = require('./src/routes/guilds.routes');
+
+// Import scheduled jobs
+require('./src/schedules/updateAttributesWeekly')();
 
 // Middleware
-app.use(express.json());
+app.use(sessionConfig);
+app.use(express.json()); // Parse incoming request with JSON payload
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use('/api/character', characterRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/characters', charactersRouter);
+app.use('/api/missions', missionsRouter);
+app.use('/api/guilds', guildsRouter);
 
 // Default route to check server status
 app.get('/', function (req, res) {
@@ -39,7 +67,8 @@ app.use(function (err, req, res) {
 
 app.listen(PORT, HOST, (error) => {
     if (error) return console.log(error);
-    console.log(`Server running on PORT ${PORT}`);
+    if (prisma) console.log('Database connection stablished successfully');
+    console.log(`Server running on ${DOMAIN}:${PORT}`);
 });
 
 // Export the Express API
