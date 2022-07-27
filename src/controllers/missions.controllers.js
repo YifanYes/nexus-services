@@ -1,6 +1,9 @@
 require('dotenv').config();
 const prisma = require('../config/database');
-const math = require('../utils/math.utils');
+const {
+    updateAttributesAfterAssignMission,
+    updateAttributesAfterCompleteMission
+} = require('../services/character.services');
 
 const getMission = async (req, res) => {
     const mission = await prisma.findUnique({
@@ -21,7 +24,6 @@ const addNewMission = async (req, res) => {
         stress,
         requirements,
         sinergy,
-        members,
         estimatedTime,
         deadline
     } = req.body;
@@ -42,42 +44,32 @@ const addNewMission = async (req, res) => {
         }
     });
 
+    return res.status(201).json({
+        message: 'Successfully created mission',
+        data: mission
+    });
+};
+
+const assignMission = async (req, res) => {
+    const { missionId, members } = req.body;
+
+    // Get mission data
+    let mission = await prisma.mission.findUnique({
+        where: {
+            id: missionId
+        }
+    });
+
+    // Check if mission exists in database
+    if (!mission) return res.status(400).json({ message: "This mission doesn't exist" });
+
     // Create relationhip with members and update each character's attributes
     for (let id of members) {
-        await prisma.missionsOnCharacters.create({
-            data: {
-                characterId: id,
-                missionId: mission.id
-            }
-        });
-
-        // Get character data
-        let character = await prisma.findUnique({
-            where: {
-                id: id
-            }
-        });
-
-        let updateStress = math.round2Fixed(
-            character.stress + (character.resistance + mission.sinergy) / 2 + 2 * mission.stress
-        );
-
-        let updatePerformance = math.round2Fixed(character.performance + mission.sinergy / 3);
-
-        await prisma.character.update({
-            where: {
-                id: id
-            },
-            data: {
-                stress: updateStress,
-                performance: updatePerformance
-            }
-        });
+        updateAttributesAfterAssignMission(mission, id);
     }
 
-    return res.status(201).json({
-        message: "Successfully created mission and updated members' atributes",
-        data: mission
+    return res.status(200).json({
+        message: 'Successfully updated members attributes'
     });
 };
 
@@ -109,50 +101,15 @@ const finishMission = async (req, res) => {
         }
     });
 
-    // Get mission data
-    let updatedMission = await prisma.mission.findUnique({
-        where: {
-            id: req.params.missionId
-        }
-    });
-
     // Updating each member's attributes
     for (let characterId of members) {
-        let character = await prisma.character.findUnique({
-            where: {
-                id: characterId
-            }
-        });
-
-        let updatedHp =
-            character.hp + Math.abs(updatedMission.stress) + updatedMission.difficulty / 4;
-        let updatedStress = character.stress + updatedMission.difficulty / 3;
-        let updatedExperience =
-            character.experience +
-            (Math.abs(updatedMission.stress) + updatedMissio.difficulty) * 2 -
-            (updatedMissio.completionTime - updatedMissio.estimatedTime) * 5;
-        let updatedPerformance =
-            character.performance +
-            updatedMission.estimatedTime -
-            updatedMission.completionTime +
-            1;
-
-        await prisma.character.update({
-            where: {
-                id: characterId
-            },
-            data: {
-                hp: updatedHp,
-                stress: updatedStress,
-                experience: updatedExperience,
-                performance: updatedPerformance
-            }
-        });
-
+        updateAttributesAfterCompleteMission(mission, characterId);
         // TODO: When completing 5 missions in a row, add 2 points to performance
     }
 
-    return res.status(200).json({ message: 'Mission complete! Characters updated successfully' });
+    return res
+        .status(200)
+        .json({ message: 'Mission complete! Characters attributes updated successfully' });
 };
 
 module.exports = {
