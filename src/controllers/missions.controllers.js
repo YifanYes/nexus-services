@@ -51,12 +51,12 @@ const addNewMission = async (req, res) => {
 };
 
 const assignMission = async (req, res) => {
-    const { missionId, members } = req.body;
+    const { members } = req.body;
 
     // Get mission data
     let mission = await prisma.mission.findUnique({
         where: {
-            id: missionId
+            id: req.params.missionId
         }
     });
 
@@ -115,5 +115,6 @@ const finishMission = async (req, res) => {
 module.exports = {
     getMission,
     addNewMission,
+    assignMission,
     finishMission
 };

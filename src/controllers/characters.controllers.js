@@ -6,10 +6,10 @@ const generateToken = require('../middlewares/generateToken.middleware');
 const tokenCaching = require('../middlewares/tokenCaching.middleware');
 
 const characterRegister = async (req, res, next) => {
-    const { username, email, password, role, characterClass } = req.body;
+    const { username, email, password, role } = req.body;
 
     // Check if all data is passed from client
-    if (!(username && email && password && role && characterClass)) {
+    if (!(username && email && password)) {
         return res.status(400).send('Missing fields');
     }
 
@@ -26,8 +26,7 @@ const characterRegister = async (req, res, next) => {
         username: username,
         email: email.toLowerCase(),
         password: bcryptjs.hashSync(password, 10), // Hashing password for security
-        role: role,
-        characterClass: characterClass
+        role: role ?? 'USER'
     };
 
     // Saving character in database
@@ -99,6 +98,19 @@ const characterLogin = async (req, res, next) => {
     return res.status(400).send('Invalid credentials');
 };
 
+const assignClass = async (req, res) => {
+    await prisma.character.update({
+        where: {
+            id: req.params.charaterId
+        },
+        data: {
+            characterClass: req.body.characterClass
+        }
+    });
+
+    return res.status(200).json({ message: 'Class assigned successfully' });
+};
+
 // Get a single character info
 const getCharacter = async (req, res) => {
     const character = await prisma.findUnique({
@@ -128,6 +140,7 @@ const signOut = async (req, res) => {
 module.exports = {
     characterRegister,
     characterLogin,
+    assignClass,
     getCharacter,
     editCharacter,
     signOut
