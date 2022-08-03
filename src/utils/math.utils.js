@@ -7,4 +7,14 @@ const round2Fixed = (number) => {
     return (Math.round(result) / 100) * Math.sign(number);
 };
 
-module.exports = { round2Fixed };
+// Parse BigInt data type to JSON readable
+const toJson = (data) => {
+    if (data !== undefined) {
+        return JSON.stringify(data, (_, v) => (typeof v === 'bigint' ? `${v}#bigint` : v)).replace(
+            /"(-?\d+)#bigint"/g,
+            (_, a) => a
+        );
+    }
+};
+
+module.exports = { round2Fixed, toJson };

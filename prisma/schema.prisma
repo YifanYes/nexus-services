@@ -27,7 +27,7 @@ model Character {
     username             String   @unique
     email                String   @unique
     password             String
-    biography            String
+    biography            String?
     profilePhoto         String?
     role                 Role     @default(USER)
     characterClass       Class?

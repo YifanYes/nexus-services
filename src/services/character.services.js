@@ -1,5 +1,42 @@
 const prisma = require('../config/database');
 const math = require('../utils/math.utils');
+const bcryptjs = require('bcryptjs');
+
+const findCharacterByEmail = (email) => {
+    return prisma.character.findUnique({
+        where: {
+            email
+        }
+    });
+};
+
+const findCharacterById = (id) => {
+    return prisma.character.findUnique({
+        where: {
+            id
+        }
+    });
+};
+
+const findCharacterByUsername = (username) => {
+    return prisma.character.findUnique({
+        where: {
+            username
+        }
+    });
+};
+
+const createCharacter = (username, email, password, role) => {
+    // Create character object and save in database
+    return prisma.character.create({
+        data: {
+            username: username,
+            email: email.toLowerCase(),
+            password: bcryptjs.hashSync(password, 10), // Hashing password for security
+            role: role
+        }
+    });
+};
 
 const updateAttributesAfterAssignMission = async (mission, characterId) => {
     // Create mission relationhip with character
@@ -11,11 +48,7 @@ const updateAttributesAfterAssignMission = async (mission, characterId) => {
     });
 
     // Get character data
-    let character = await prisma.character.findUnique({
-        where: {
-            id: characterId
-        }
-    });
+    let character = await findCharacterById(characterId);
 
     // Check if character exists in database
     if (!character) return res.status(400).json({ message: "This character doesn't exist" });
@@ -81,7 +114,11 @@ const orderCharactersByLevel = async () => {
 };
 
 module.exports = {
-    orderCharactersByLevel,
+    findCharacterByEmail,
+    findCharacterById,
+    findCharacterByUsername,
+    createCharacter,
     updateAttributesAfterAssignMission,
-    updateAttributesAfterCompleteMission
+    updateAttributesAfterCompleteMission,
+    orderCharactersByLevel
 };

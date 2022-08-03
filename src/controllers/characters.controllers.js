@@ -2,8 +2,14 @@ require('dotenv').config();
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/database');
-const generateToken = require('../middlewares/generateToken.middleware');
-const tokenCaching = require('../middlewares/tokenCaching.middleware');
+const {
+    findCharacterByEmail,
+    findCharacterById,
+    findCharacterByUsername,
+    createCharacter
+} = require('../services/character.services');
+const { toJson } = require('../utils/math.utils');
+const { generateToken, verifyToken } = require('../services/auth.services');
 
 const characterRegister = async (req, res, next) => {
     const { username, email, password, role } = req.body;
@@ -14,52 +20,22 @@ const characterRegister = async (req, res, next) => {
     }
 
     // Check if character already exists
-    let existingCharacter = await prisma.character.findUnique({
-        where: {
-            email: email
-        }
-    });
-    if (existingCharacter.length) return res.status(409).send('Email already exists');
+    const existingCharacter = await findCharacterByEmail(email);
+
+    if (existingCharacter) return res.status(400).json({ message: 'Character already exists' });
 
     // Create character object
-    const newCharacter = {
-        username: username,
-        email: email.toLowerCase(),
-        password: bcryptjs.hashSync(password, 10), // Hashing password for security
-        role: role ?? 'USER'
-    };
-
-    // Saving character in database
-    const createdCharacter = await prisma.character.create({
-        data: newCharacter
-    });
+    const newCharacter = toJson(await createCharacter(username, email, password, role));
+    const token = generateToken(newCharacter);
 
     // Return auth token
-    if (createdCharacter) {
-        const resultAccess = await generateToken(createdCharacter, 1);
-        const resultRefresh = await generateToken(createdCharacter, 2);
-        const refreshSecret = process.env.JWT_REFRESH_SECRET;
-
-        const resultCaching = await tokenCaching.setCache(accessToken); // Cache the valid token
-        if (!resultCaching.result) {
-            const error = new Error();
-            error.message = resultCaching.message;
-            throw error;
-        }
-
-        // If token is not valid, it throws an error
-        await jwt.verify(resultRefresh.token, refreshSecret);
-
-        return res
-            .status(201)
-            .cookie('accessToken', resultAccess.token, resultAccess.cookie)
-            .cookie('refreshToken', resultRefresh.token, resultRefresh.cookie)
-            .json({
-                message: 'Character created successfully',
-                token: resultAccess.token
-            });
+    if (newCharacter) {
+        return res.status(201).json({
+            message: 'Character created successfully',
+            id: newCharacter.id,
+            token: token
+        });
     }
-
     return res.status(500).json({ message: 'Something went wrong' });
 };
 
@@ -70,34 +46,24 @@ const characterLogin = async (req, res, next) => {
     if (!(username && password)) return res.status(401).send('Fields missing');
 
     // Look for character in database
-    let character = await prisma.character.findUnique({
-        where: {
-            username: username
-        }
-    });
+    let character = toJson(await findCharacterByUsername(username));
+
     if (!character) return res.status(401).send("This character doesn't exists");
 
     // Check password hash matches
     if (character && bcryptjs.compareSync(password, character.password)) {
-        let token = jwt.sign(
-            {
-                character
-            },
-            process.env.SEED_AUTH,
-            {
-                expiresIn: process.env.TOKEN_EXPIRY
-            }
-        );
+        const token = generateToken(character);
 
         return res.status(200).json({
             message: 'Authentification successful',
-            token
+            token: token
         });
     }
 
     return res.status(400).send('Invalid credentials');
 };
 
+// Asign a class to the character for attribute modifyers
 const assignClass = async (req, res) => {
     await prisma.character.update({
         where: {
@@ -111,15 +77,35 @@ const assignClass = async (req, res) => {
     return res.status(200).json({ message: 'Class assigned successfully' });
 };
 
-// Get a single character info
-const getCharacter = async (req, res) => {
-    const character = await prisma.findUnique({
-        where: {
-            id: req.params.charaterId
-        }
+// Assign a character to a guild
+const assignGuild = async (req, res) => {
+    const characterId = req.params.characterId;
+
+    await prisma.charactersOnGuilds.create({
+        characterId: characterId,
+        guildId: guildId
     });
 
-    return res.status(200).json({ data: character });
+    return res.status(201).json({ message: 'Welcome to the guild!' });
+};
+
+// Get a single character info
+const getCharacter = async (req, res) => {
+    const id = BigInt(req.params.characterId);
+    const character = await findCharacterById(id);
+
+    if (!character)
+        return res.status(404).json({
+            message: 'This character doesnt exists'
+        });
+
+    return res.status(200).json({ data: toJson(character) });
+};
+
+// Get a list of all characters in database
+const getAllCharacters = async (req, res) => {
+    const characterList = await prisma.character.findMany({});
+    return res.status(200).json({ data: toJson(characterList) });
 };
 
 const editCharacter = async (req, res) => {
@@ -141,7 +127,9 @@ module.exports = {
     characterRegister,
     characterLogin,
     assignClass,
+    assignGuild,
     getCharacter,
+    getAllCharacters,
     editCharacter,
     signOut
 };
