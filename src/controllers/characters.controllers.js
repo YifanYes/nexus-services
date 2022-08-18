@@ -112,17 +112,6 @@ const editCharacter = async (req, res) => {
     const { stress, performance, resistance } = req.body;
 };
 
-const signOut = async (req, res) => {
-    try {
-        res.status(200).clearCookie('accessToken').clearCookie('refreshToken').json({
-            message: 'Signed out'
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Something went wrong' });
-        return;
-    }
-};
-
 module.exports = {
     characterRegister,
     characterLogin,
@@ -130,6 +119,5 @@ module.exports = {
     assignGuild,
     getCharacter,
     getAllCharacters,
-    editCharacter,
-    signOut
+    editCharacter
 };

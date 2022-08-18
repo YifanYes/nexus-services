@@ -1,3 +1,5 @@
+const { createCharacter } = require('../../src/services/character.services');
+
 test('Character can be registered', async () => {
     let character = { username: 'nexusUser', password: 'nexusUser' };
 

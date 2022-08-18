@@ -4,7 +4,7 @@ const math = require('../utils/math.utils');
 
 const updateAttributesWeekly = async () => {
     // Get all characters list
-    let characterList = await prisma.character.findMany();
+    let characterList = await prisma.character.findMany({});
 
     // Update each character document as the methodology guidelines
     for (let character of characterList) {

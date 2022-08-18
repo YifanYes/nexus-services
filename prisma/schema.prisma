@@ -58,6 +58,7 @@ model Guild {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    boards     Board[]
     characters CharactersOnGuilds[]
 }
 
@@ -81,6 +82,8 @@ model Board {
     updatedAt   DateTime @updatedAt
 
     columns Column[]
+    Guild   Guild?   @relation(fields: [guildId], references: [id])
+    guildId BigInt?
 }
 
 model Column {

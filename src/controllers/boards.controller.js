@@ -1,12 +1,10 @@
 const prisma = require('../config/database');
 const { toJson } = require('../utils/math.utils');
+const { createBoard } = require('../services/board.services');
 
-const createBoard = async (req, res) => {
-    const board = await prisma.board.create({
-        data: {
-            name: req.body.name
-        }
-    });
+const initializeBoard = async (req, res) => {
+    // De donde saco el guildId?
+    const board = await createBoard(req.body.name, guildId);
 
     if (!board) return res.status(400).json({ message: 'Something went wrong' });
 
@@ -31,6 +29,7 @@ const getBoard = async (req, res) => {
 };
 
 module.exports = {
+    initializeBoard,
     createBoard,
     getBoard
 };
