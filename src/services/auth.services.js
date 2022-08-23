@@ -2,8 +2,8 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const generateToken = (character) => {
-    return jwt.sign({ character }, process.env.SEED_AUTH, {
-        expiresIn: process.env.TOKEN_EXPIRY
+    return jwt.sign({ character }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRESIN
     });
 };
 

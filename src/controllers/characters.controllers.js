@@ -65,21 +65,33 @@ const characterLogin = async (req, res, next) => {
 
 // Asign a class to the character for attribute modifyers
 const assignClass = async (req, res) => {
-    await prisma.character.update({
-        where: {
-            id: req.params.charaterId
-        },
-        data: {
-            characterClass: req.body.characterClass
-        }
-    });
+    const characterClass = req.body.characterClass;
 
-    return res.status(200).json({ message: 'Class assigned successfully' });
+    // Check if provided class is valid
+    const validClass = ['WARRIOR', 'ASSASSIN', 'MAGE', 'BARD'];
+
+    if (validClass.includes(characterClass)) {
+        const characterWithClass = await prisma.character.update({
+            where: {
+                id: req.params.charaterId
+            },
+            data: {
+                characterClass: characterClass
+            }
+        });
+
+        return res
+            .status(200)
+            .json({ message: 'Class assigned successfully', data: toJson(characterWithClass) });
+    }
+
+    return res.status(400).json({ message: 'Invalid Class' });
 };
 
 // Assign a character to a guild
 const assignGuild = async (req, res) => {
     const characterId = req.params.characterId;
+    const guildId = req.body.guildId;
 
     await prisma.charactersOnGuilds.create({
         characterId: characterId,
@@ -108,8 +120,32 @@ const getAllCharacters = async (req, res) => {
     return res.status(200).json({ data: toJson(characterList) });
 };
 
+// Extraordinarily edit character attributes by task master
 const editCharacter = async (req, res) => {
     const { stress, performance, resistance } = req.body;
+    const characterId = req.params.characterId;
+
+    const character = await findCharacterById(id);
+
+    if (!character)
+        return res.status(404).json({
+            message: 'This character doesnt exists'
+        });
+
+    const characterUpdate = await prisma.character.update({
+        where: {
+            id: characterId
+        },
+        data: {
+            stress,
+            performance,
+            resistance
+        }
+    });
+
+    if (!characterUpdate) return res.status(500).json({ message: 'Internal server error' });
+
+    return res.status(200).json({ data: toJson(characterUpdate) });
 };
 
 module.exports = {
