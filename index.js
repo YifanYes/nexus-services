@@ -1,8 +1,10 @@
 require('dotenv').config();
 const express = require('express');
+const http2Express = require('http2-express-bridge');
+const http2 = require('http2');
 const bodyParser = require('body-parser');
-const session = require('express-session');
-const app = express();
+const { readFileSync } = require('fs');
+const app = http2Express(express);
 
 // Basic Configuration
 const PORT = process.env.PORT || 8080;
@@ -12,23 +14,7 @@ const HOST = '0.0.0.0';
 // Import Prisma Client
 const prisma = require('./src/config/database');
 
-// CSRF protection middleware
-const sessionConfig = session({
-    secret: process.env.CSRFT_SESSION_SECRET,
-    keys: ['some random key'],
-    resave: false,
-    saveUninitialized: false,
-    // Generated session id is stored in the cookie
-    cookie: {
-        maxAge: parseInt(process.env.CSRFT_EXPIRESIN), // Expiration time
-        sameSite: 'strict', // Cookies will only be sent in a first-party context. 'lax' is default value for third-parties
-        httpOnly: true, // Cookie is sent only over HTTP(S) domain of the server in which the URL is being requested
-        secure: false // Browser only sends the cookie over HTPPS. False for localhost
-    }
-});
-
 // Import routes modules
-const authRouter = require('./src/routes/auth.routes');
 const charactersRouter = require('./src/routes/characters.routes');
 const missionsRouter = require('./src/routes/missions.routes');
 const guildsRouter = require('./src/routes/guilds.routes');
@@ -37,11 +23,9 @@ const guildsRouter = require('./src/routes/guilds.routes');
 require('./src/schedules/updateAttributesWeekly')();
 
 // Middleware
-app.use(sessionConfig);
 app.use(express.json()); // Parse incoming request with JSON payload
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use('/api/auth', authRouter);
 app.use('/api/characters', charactersRouter);
 app.use('/api/missions', missionsRouter);
 app.use('/api/guilds', guildsRouter);
@@ -65,10 +49,21 @@ app.use(function (err, req, res) {
     });
 });
 
-app.listen(PORT, HOST, (error) => {
-    if (error) return console.log(error);
+// Server configuration fot HTTP2
+const options = {
+    key: readFileSync('./server.key'),
+    cert: readFileSync('./server.cert'),
+    allowHTTP1: true
+};
+
+// Initialize server
+const server = http2.createSecureServer(options, app);
+
+server.on('error', (err) => console.log(err));
+
+server.listen(PORT, () => {
     if (prisma) console.log('Database connection stablished successfully');
-    console.log(`Server running on ${DOMAIN}:${PORT}`);
+    console.log(`Server running on Port: ${PORT}`);
 });
 
 // Export the Express API

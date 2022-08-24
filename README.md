@@ -22,6 +22,12 @@ To run database migrations, first you need a sql connection string, then run:
 $ npx prisma migrate dev
 ```
 
+To generate SSL certificate and key:
+
+```
+$ openssl req  -nodes -new -x509  -keyout server.key -out server.cert
+```
+
 And to run the server:
 
 ```
